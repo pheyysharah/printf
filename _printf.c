@@ -1,37 +1,64 @@
-#include "holberton.h"
+#include "main.h"
+void print_buffer(char buffer[], int *buff_ind);
 
 /**
- * _printf - Receives the main string and all the necessary parameters to
- * print a formated string
- * @format: A string containing all the desired characters
- * Return: A total count of the characters printed
+ * _printf - Printf
+ * @format: format
+ * Return: Printed Chars.
  */
 int _printf(const char *format, ...)
 {
-	int printed_chars;
-	conver_t f_list[] = {
-		{"c", print_char},
-		{"s", print_string},
-		{"%", print_percent},
-		{"d", print_integer},
-		{"i", print_integer},
-		{"b", print_binary},
-		{"r", print_reversed},
-		{"R", rot13},
-		{"u", unsigned_integer},
-		{"o", print_octal},
-		{"x", print_hex},
-		{"X", print_heX},
-		{NULL, NULL}
-	};
-	va_list arg_list;
+	int j, pointer = 0, printed_chars = 0;
+	int flag, width, prec, sizes, buff_ind = 0;
+	va_list list;
+	char buffer[BUFF_SIZE];
 
 	if (format == NULL)
 		return (-1);
 
-	va_start(arg_list, format);
-	/*Calling parser function*/
-	printed_chars = parser(format, f_list, arg_list);
-	va_end(arg_list);
+	va_start(list, format);
+
+	for (j = 0; format && format[j] != '\0'; j++)
+	{
+		if (format[j] != '%')
+		{
+			buffer[buff_ind++] = format[j];
+			if (buff_ind == BUFF_SIZE)
+				print_buffer(buffer, &buff_ind);
+			printed_chars++;
+		}
+		else
+		{
+			print_buffer(buffer, &buff_ind);
+			flag = get_flags(format, &j);
+			width = get_width(format, &j, list);
+			prec = get_prec(format, &j, list);
+			sizes = get_sizes(format, &j);
+			++j;
+			pointer = handle_print(format, &j, list, buffer,
+				flag, sizes, width, prec);
+			if (pointer == -1)
+				return (-1);
+			printed_chars += pointer;
+		}
+	}
+
+	print_buffer(buffer, &buff_ind);
+
+	va_end(list);
+
 	return (printed_chars);
+}
+
+/**
+ * print_buffer - Print
+ * @buffer: Array
+ * @buff_ind: Index
+ */
+void print_buffer(char buffer[], int *buff_ind)
+{
+	if (*buff_ind > 0)
+		write(1, &buffer[0], *buff_ind);
+
+	*buff_ind = 0;
 }
